@@ -19,6 +19,7 @@ settings = get_settings()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -62,7 +63,7 @@ async def get_current_user(
 
 
 async def get_current_user_optional(
-    token: Annotated[str | None, Depends(oauth2_scheme)] = None,
+    token: Annotated[str | None, Depends(oauth2_scheme_optional)] = None,
     db: Annotated[AsyncSession, Depends(get_db)] = None
 ) -> User | None:
     """Get current user if token is valid, otherwise return None."""

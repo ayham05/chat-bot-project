@@ -131,7 +131,7 @@ export default function GeneratedProblemPage() {
 
                     {/* Code Editor */}
                     <div className="w-1/2 flex flex-col min-h-0">
-                        <div className="flex-1 p-4 h-full min-h-0">
+                        <div className="flex-1 p-4 min-h-0 flex flex-col">
                             <CodeEditor value={code} onChange={setCode} height="100%" />
                         </div>
 

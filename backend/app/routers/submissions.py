@@ -10,9 +10,7 @@ from app.database import get_db
 from app.models.problem import Problem
 from app.models.submission import Submission
 from app.models.user import User
-from app.routers.auth import get_current_user
-from app.schemas.submission import SubmissionCreate, SubmissionResponse, GradeResponse
-from app.services.ai_service import ai_service
+from app.routers.auth import get_current_user, get_current_user_optional
 
 router = APIRouter(prefix="/submissions", tags=["Submissions"])
 
@@ -20,7 +18,7 @@ router = APIRouter(prefix="/submissions", tags=["Submissions"])
 @router.post("", response_model=GradeResponse, status_code=status.HTTP_201_CREATED)
 async def submit_code(
     submission_data: SubmissionCreate,
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[User | None, Depends(get_current_user_optional)],
     db: Annotated[AsyncSession, Depends(get_db)]
 ):
     """Submit code for grading."""
@@ -64,8 +62,8 @@ async def submit_code(
     
     submission_id = uuid.uuid4()
     
-    # Save submission ONLY if we have a valid DB problem
-    if problem:
+    # Save submission ONLY if we have a valid DB problem AND a logged-in user
+    if problem and current_user:
         submission = Submission(
             user_id=current_user.id,
             problem_id=problem.id,
