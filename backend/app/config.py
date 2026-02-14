@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     def final_gemini_key(self) -> Optional[str]:
         """Get the effective Gemini API key."""
         return self.GEMINI_API_KEY or self.GOOGLE_API_KEY
-    AI_MODEL: str = "gemini-2.0-flash"
+    AI_MODEL: str = "gemini-flash-latest"
     
     # CORS
     CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost"]

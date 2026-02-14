@@ -1,32 +1,31 @@
-from typing import Optional
 from pydantic import BaseModel, Field
 
 
+class Example(BaseModel):
+    """A single input/output example for a coding problem."""
+    input: str
+    output: str
+    explanation: str = ""
+
+
 class GenerateProblemRequest(BaseModel):
-    """Request schema for generating a new problem."""
+    """Request schema for generating a new problem via Gemini."""
     topic: str = Field(
-        default="IO",
-        description="Topic: IO, IF, LOOP, or ARRAY"
+        ...,
+        description="The coding topic, e.g. 'Arrays', 'Strings', 'Dynamic Programming'",
+        examples=["Arrays", "Linked Lists", "Recursion"]
     )
     difficulty: str = Field(
-        default="Easy",
-        description="Difficulty: Easy, Medium, or Hard"
-    )
-    custom_request: Optional[str] = Field(
-        default=None,
-        description="Optional custom request to guide problem generation"
+        ...,
+        description="Difficulty level: Easy, Medium, or Hard",
+        examples=["Easy", "Medium", "Hard"]
     )
 
 
 class GeneratedProblemResponse(BaseModel):
-    """Response schema for a generated problem."""
-    topic: str
-    difficulty: str
-    title_en: str
-    title_ar: str
-    desc_en: str
-    desc_ar: str
-    input_format: Optional[str] = None
-    output_format: Optional[str] = None
-    constraints: Optional[str] = None
-    sample_io: list[dict]
+    """Response schema matching the strict JSON returned by Gemini."""
+    title: str
+    description: str
+    examples: list[Example]
+    constraints: str
+    starter_code: str

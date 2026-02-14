@@ -4,15 +4,13 @@ from app.schemas.user import (
     UserResponse,
     Token
 )
-from app.schemas.problem import (
-    ProblemCreate,
-    ProblemResponse,
-    ProblemListResponse
+from app.schemas.generate import (
+    GenerateProblemRequest,
+    GeneratedProblemResponse
 )
-from app.schemas.submission import (
-    SubmissionCreate,
-    SubmissionResponse,
-    GradeResponse
+from app.schemas.solution import (
+    SubmitSolutionRequest,
+    SolutionFeedbackResponse
 )
 from app.schemas.chat import (
     ChatMessage,
@@ -22,7 +20,7 @@ from app.schemas.chat import (
 
 __all__ = [
     "UserCreate", "UserLogin", "UserResponse", "Token",
-    "ProblemCreate", "ProblemResponse", "ProblemListResponse",
-    "SubmissionCreate", "SubmissionResponse", "GradeResponse",
-    "ChatMessage", "ChatRequest", "ChatResponse"
+    "GenerateProblemRequest", "GeneratedProblemResponse",
+    "SubmitSolutionRequest", "SolutionFeedbackResponse",
+    "ChatMessage", "ChatRequest", "ChatResponse",
 ]
