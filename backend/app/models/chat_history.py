@@ -1,34 +1,43 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, DateTime, ForeignKey, JSON
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import Optional, List, Any, TYPE_CHECKING
+from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import Column, String, DateTime, ForeignKey, JSON
 from sqlalchemy.dialects.postgresql import UUID
-from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
-class ChatHistory(Base):
+class ChatHistory(SQLModel, table=True):
     __tablename__ = "chat_histories"
-    
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.uuid4
+
+    id: Optional[uuid.UUID] = Field(
+        default_factory=uuid.uuid4,
+        sa_column=Column(UUID(as_uuid=True), primary_key=True)
     )
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="CASCADE")
+    user_id: uuid.UUID = Field(
+        sa_column=Column(
+            UUID(as_uuid=True),
+            ForeignKey("users.id", ondelete="CASCADE"),
+            nullable=False
+        )
     )
-    track: Mapped[str] = mapped_column(String(50))  # "problem_solving" or "robotics"
-    messages: Mapped[list] = mapped_column(JSON, default=list)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.utcnow
+    track: str = Field(
+        sa_column=Column(String(50), nullable=False)
     )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow
+    messages: List[Any] = Field(
+        default_factory=list,
+        sa_column=Column(JSON, default=list)
     )
-    
+    created_at: Optional[datetime] = Field(
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime, default=datetime.utcnow)
+    )
+    updated_at: Optional[datetime] = Field(
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    )
+
     # Relationships
-    user = relationship("User", back_populates="chat_histories")
+    user: Optional["User"] = Relationship(back_populates="chat_histories")

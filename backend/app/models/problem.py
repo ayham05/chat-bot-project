@@ -1,22 +1,53 @@
-from sqlalchemy import String, Text, Integer, JSON
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.database import Base
+from typing import Optional, List, Dict, Any, TYPE_CHECKING
+from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import Column, String, Text, Integer, JSON
+
+if TYPE_CHECKING:
+    from app.models.submission import Submission
 
 
-class Problem(Base):
+class Problem(SQLModel, table=True):
     __tablename__ = "problems"
-    
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    topic: Mapped[str] = mapped_column(String(50), index=True)  # IO, IF, LOOP, ARRAY
-    difficulty: Mapped[str] = mapped_column(String(20))  # Easy, Medium, Hard
-    title_en: Mapped[str] = mapped_column(String(255))
-    title_ar: Mapped[str] = mapped_column(String(255), nullable=True)
-    desc_en: Mapped[str] = mapped_column(Text)  # Markdown supported
-    desc_ar: Mapped[str] = mapped_column(Text, nullable=True)  # Arabic translation
-    constraints: Mapped[str] = mapped_column(Text, nullable=True)
-    input_format: Mapped[str] = mapped_column(Text, nullable=True)
-    output_format: Mapped[str] = mapped_column(Text, nullable=True)
-    sample_io: Mapped[dict] = mapped_column(JSON)  # [{input: "5", output: "10"}]
-    
+
+    id: Optional[int] = Field(
+        default=None,
+        sa_column=Column(Integer, primary_key=True, autoincrement=True)
+    )
+    topic: str = Field(
+        sa_column=Column(String(50), index=True, nullable=False)
+    )
+    difficulty: str = Field(
+        sa_column=Column(String(20), nullable=False)
+    )
+    title_en: str = Field(
+        sa_column=Column(String(255), nullable=False)
+    )
+    title_ar: Optional[str] = Field(
+        default=None,
+        sa_column=Column(String(255), nullable=True)
+    )
+    desc_en: str = Field(
+        sa_column=Column(Text, nullable=False)
+    )
+    desc_ar: Optional[str] = Field(
+        default=None,
+        sa_column=Column(Text, nullable=True)
+    )
+    constraints: Optional[str] = Field(
+        default=None,
+        sa_column=Column(Text, nullable=True)
+    )
+    input_format: Optional[str] = Field(
+        default=None,
+        sa_column=Column(Text, nullable=True)
+    )
+    output_format: Optional[str] = Field(
+        default=None,
+        sa_column=Column(Text, nullable=True)
+    )
+    sample_io: Dict[str, Any] = Field(
+        sa_column=Column(JSON, nullable=False)
+    )
+
     # Relationships
-    submissions = relationship("Submission", back_populates="problem")
+    submissions: List["Submission"] = Relationship(back_populates="problem")

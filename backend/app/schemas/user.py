@@ -20,7 +20,8 @@ class UserResponse(BaseModel):
     email: str
     created_at: datetime
     
-    class Config:
+    """allows Pydantic to bridge the gap between Database Objects and JSON Data"""
+    class Config:  
         from_attributes = True
 
 

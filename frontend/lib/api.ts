@@ -156,14 +156,32 @@ export interface GenerateProblemRequest {
 
 export const generateApi = {
     problem: async (request: GenerateProblemRequest = {}): Promise<Problem> => {
+        const topic = request.topic || 'IO';
+        const difficulty = request.difficulty || 'Easy';
         const { data } = await api.post('/generate/problem', {
-            topic: request.topic || 'IO',
-            difficulty: request.difficulty || 'Easy',
+            topic,
+            difficulty,
             custom_request: request.custom_request,
         });
+        // Map backend response to frontend Problem interface
+        // Handle both old format (title/description/examples) and new format (title_en/desc_en/sample_io)
+        const examples = data.examples || data.sample_io || [];
+        const sampleIo = examples.map((ex: any) => ({
+            input: ex.input || '',
+            output: ex.output || '',
+        }));
         return {
-            ...data,
-            id: Date.now(), // Temporary ID for generated problems
+            id: Date.now(),
+            title_en: data.title_en || data.title || 'Untitled Problem',
+            title_ar: data.title_ar || '',
+            topic: data.topic || topic,
+            difficulty: data.difficulty || difficulty,
+            desc_en: data.desc_en || data.description || '',
+            desc_ar: data.desc_ar || '',
+            constraints: data.constraints || '',
+            input_format: data.input_format || '',
+            output_format: data.output_format || '',
+            sample_io: sampleIo,
         };
     },
 };

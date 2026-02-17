@@ -3,14 +3,16 @@ import uuid
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_db
 from app.models.problem import Problem
 from app.models.submission import Submission
 from app.models.user import User
 from app.routers.auth import get_current_user, get_current_user_optional
+from app.schemas.submission import SubmissionCreate, SubmissionResponse, GradeResponse
+from app.services.ai_service import ai_service
 
 router = APIRouter(prefix="/submissions", tags=["Submissions"])
 
@@ -72,7 +74,7 @@ async def submit_code(
             ai_feedback=grade_result["feedback_ar"]
         )
         db.add(submission)
-        await db.flush()
+        await db.commit()
         await db.refresh(submission)
         submission_id = submission.id
     

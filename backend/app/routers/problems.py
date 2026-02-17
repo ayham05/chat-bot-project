@@ -1,8 +1,9 @@
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
+from sqlalchemy import func
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_db
 from app.models.problem import Problem
@@ -76,6 +77,6 @@ async def create_problem(
         sample_io=[io.model_dump() for io in problem_data.sample_io]
     )
     db.add(problem)
-    await db.flush()
+    await db.commit()
     await db.refresh(problem)
     return problem

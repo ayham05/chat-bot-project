@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 
 from app.schemas.solution import SubmitSolutionRequest, SolutionFeedbackResponse
-from app.services.ai_service import get_ai_service
+from app.services.ai_service import ai_service
 
 router = APIRouter(tags=["Solutions"])
 
@@ -14,7 +14,6 @@ async def submit_solution(request: SubmitSolutionRequest):
     and provides an optimized solution when applicable.
     """
     try:
-        ai_service = get_ai_service()
         result = await ai_service.review_solution(
             problem_context=request.problem_context,
             user_code=request.user_code,

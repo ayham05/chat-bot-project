@@ -23,9 +23,15 @@ class GenerateProblemRequest(BaseModel):
 
 
 class GeneratedProblemResponse(BaseModel):
-    """Response schema matching the strict JSON returned by Gemini."""
-    title: str
-    description: str
-    examples: list[Example]
-    constraints: str
-    starter_code: str
+    """Response schema matching the frontend Problem interface."""
+    title_en: str
+    title_ar: str = ""
+    topic: str
+    difficulty: str
+    desc_en: str
+    desc_ar: str = ""
+    constraints: str = ""
+    input_format: str = ""
+    output_format: str = ""
+    sample_io: list[Example]
+    starter_code: str = ""

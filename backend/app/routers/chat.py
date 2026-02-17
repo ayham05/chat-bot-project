@@ -2,8 +2,8 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_db
 from app.models.chat_history import ChatHistory
@@ -94,7 +94,7 @@ async def send_message(
     messages.append({"role": "assistant", "content": response["message"]})
     chat_history.messages = messages[-50:]  # Keep last 50 messages
     
-    await db.flush()
+    await db.commit()
     
     return ChatResponse(
         message=response["message"],
@@ -121,6 +121,6 @@ async def clear_chat_history(
     
     if history:
         history.messages = []
-        await db.flush()
+        await db.commit()
     
     return {"status": "cleared"}

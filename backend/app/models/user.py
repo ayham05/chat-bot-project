@@ -1,27 +1,36 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, DateTime
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import Optional, List, TYPE_CHECKING
+from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import Column, String, DateTime
 from sqlalchemy.dialects.postgresql import UUID
-from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.submission import Submission
+    from app.models.chat_history import ChatHistory
 
 
-class User(Base):
+class User(SQLModel, table=True):
     __tablename__ = "users"
-    
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.uuid4
+
+    id: Optional[uuid.UUID] = Field(
+        default_factory=uuid.uuid4,
+        sa_column=Column(UUID(as_uuid=True), primary_key=True)
     )
-    username: Mapped[str] = mapped_column(String(100), unique=True, index=True)
-    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    password_hash: Mapped[str] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.utcnow
+    username: str = Field(
+        sa_column=Column(String(100), unique=True, index=True, nullable=False)
     )
-    
+    email: str = Field(
+        sa_column=Column(String(255), unique=True, index=True, nullable=False)
+    )
+    password_hash: str = Field(
+        sa_column=Column(String(255), nullable=False)
+    )
+    created_at: Optional[datetime] = Field(
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime, default=datetime.utcnow)
+    )
+
     # Relationships
-    submissions = relationship("Submission", back_populates="user")
-    chat_histories = relationship("ChatHistory", back_populates="user")
+    submissions: List["Submission"] = Relationship(back_populates="user")
+    chat_histories: List["ChatHistory"] = Relationship(back_populates="user")

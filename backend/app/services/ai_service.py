@@ -12,6 +12,7 @@ if settings.GEMINI_API_KEY:
 else:
     logger.warning("GEMINI_API_KEY is not set. AI features will not work.")
 
+
 class AIService:
     def __init__(self):
         self.model_name = settings.AI_MODEL
@@ -20,6 +21,17 @@ class AIService:
         except Exception as e:
             logger.error(f"Failed to initialize model {self.model_name}: {e}")
             raise
+
+    def _clean_json_response(self, text: str) -> str:
+        """Strip markdown code fencing from an AI response."""
+        text = text.strip()
+        if text.startswith("```json"):
+            text = text[7:]
+        if text.startswith("```"):
+            text = text[3:]
+        if text.endswith("```"):
+            text = text[:-3]
+        return text.strip()
 
     async def generate_problem(self, topic: str, difficulty: str) -> dict:
         prompt = (
@@ -33,21 +45,81 @@ class AIService:
             "- constraints: string\n"
             "- starter_code: string\n"
         )
-        
+
         try:
             response = await self.model.generate_content_async(prompt)
-            # Basic cleanup if model ignores "no markdown" instruction
-            text = response.text.strip()
-            if text.startswith("```json"):
-                text = text[7:]
-            if text.startswith("```"):
-                text = text[3:]
-            if text.endswith("```"):
-                text = text[:-3]
+            text = self._clean_json_response(response.text)
             return json.loads(text)
         except Exception as e:
             logger.error(f"Error in generate_problem: {e}")
             raise
+
+    async def grade_code(
+        self,
+        code: str,
+        problem_desc: str,
+        constraints: str | None = None,
+        sample_io: list | None = None,
+    ) -> dict:
+        """Grade a user's code submission using AI.
+
+        Returns a dict with: status, is_correct, feedback_en, feedback_ar, hint.
+        """
+        sample_io_text = json.dumps(sample_io, ensure_ascii=False) if sample_io else "N/A"
+
+        prompt = (
+            "You are an expert code grader for a C++ / Robotics educational platform.\n"
+            "Evaluate the following code against the problem description.\n\n"
+            f"### Problem Description\n{problem_desc}\n\n"
+            f"### Constraints\n{constraints or 'N/A'}\n\n"
+            f"### Sample Input/Output\n{sample_io_text}\n\n"
+            f"### Student Code\n```\n{code}\n```\n\n"
+            "Respond with ONLY strict JSON (no markdown, no extra text). "
+            "The JSON must contain exactly these keys:\n"
+            '- "status": one of "ACCEPTED", "WRONG_ANSWER", "SYNTAX_ERROR", "LOGIC_ERROR", "RUNTIME_ERROR"\n'
+            '- "is_correct": boolean\n'
+            '- "feedback_en": string with detailed feedback in English\n'
+            '- "feedback_ar": string with detailed feedback in Arabic\n'
+            '- "hint": string with a short hint for the student (or null if correct)\n'
+        )
+
+        try:
+            response = await self.model.generate_content_async(prompt)
+            text = self._clean_json_response(response.text)
+            result = json.loads(text)
+
+            # Validate required keys
+            required = {"status", "is_correct", "feedback_en", "feedback_ar", "hint"}
+            if not required.issubset(result.keys()):
+                missing = required - result.keys()
+                logger.warning(f"grade_code response missing keys: {missing}")
+                # Fill in defaults for any missing keys
+                result.setdefault("status", "WRONG_ANSWER")
+                result.setdefault("is_correct", False)
+                result.setdefault("feedback_en", "Could not fully evaluate the code.")
+                result.setdefault("feedback_ar", "تعذّر تقييم الكود بشكل كامل.")
+                result.setdefault("hint", None)
+
+            return result
+
+        except json.JSONDecodeError as e:
+            logger.error(f"grade_code JSON parse error: {e}")
+            return {
+                "status": "WRONG_ANSWER",
+                "is_correct": False,
+                "feedback_en": "The grading system encountered an error. Please try again.",
+                "feedback_ar": "واجه نظام التقييم خطأ. يرجى المحاولة مرة أخرى.",
+                "hint": None,
+            }
+        except Exception as e:
+            logger.error(f"grade_code error: {e}")
+            return {
+                "status": "WRONG_ANSWER",
+                "is_correct": False,
+                "feedback_en": "An unexpected error occurred during grading.",
+                "feedback_ar": "حدث خطأ غير متوقع أثناء التقييم.",
+                "hint": None,
+            }
 
     async def review_solution(self, problem_context: str, user_code: str) -> str:
         prompt = (
@@ -57,7 +129,7 @@ class AIService:
             "Provide feedback on correctness, complexity, and bugs. "
             "Return the response as a Markdown string."
         )
-        
+
         try:
             response = await self.model.generate_content_async(prompt)
             return response.text
@@ -72,27 +144,13 @@ class AIService:
             "Answer in Arabic, keep code in English. Be encouraging."
         )
         full_prompt = f"System: {system_prompt}\nUser: {message}"
-        
+
         if kwargs.get("problem_context"):
             full_prompt += f"\nContext: {kwargs['problem_context']}"
-            
+
         if kwargs.get("code_context"):
             full_prompt += f"\nCode: {kwargs['code_context']}"
 
-        # Add history if provided (simplistic history handling)
-        # Gemeni supports chat history via start_chat but here we just append previous messages?
-        # The original code just ignored history in the prompt construction!
-        # "history" argument was unused in prompt construction in original code:
-        # full_prompt = f"System: {PROBLEM_SOLVING_SYSTEM}\nUser: {message}"
-        # ...
-        # So I will replicate that behavior or maybe improve it?
-        # User asked to "Rewrite app/services/ai_service.py".
-        # But this specific restoration is to fix regression. I'll stick to original behavior + code_context support if it was there?
-        # Original code:
-        # 87:     async def chat(self, track: str, message: str, history: list = None, **kwargs) -> dict:
-        # ...
-        # 93:             response = await self.model.generate_content_async(full_prompt)
-        
         try:
             response = await self.model.generate_content_async(full_prompt)
             return {
@@ -107,5 +165,6 @@ class AIService:
                 "message_ar": "عذراً، حدث خطأ في الاتصال.",
                 "suggestions": [],
             }
+
 
 ai_service = AIService()
