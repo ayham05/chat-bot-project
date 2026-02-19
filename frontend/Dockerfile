@@ -20,6 +20,10 @@ RUN mkdir -p public
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Accept API URL as build arg so Next.js can bake it into rewrites
+ARG NEXT_PUBLIC_API_URL=http://backend:8000
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
 RUN npm run build
 
 # Runner stage
@@ -28,6 +32,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Runtime API URL for server-side proxy (resolved at runtime, not build time)
+ENV INTERNAL_API_URL=http://backend:8000
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
