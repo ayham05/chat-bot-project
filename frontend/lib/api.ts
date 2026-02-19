@@ -101,13 +101,15 @@ export const chatApi = {
         track: 'problem_solving' | 'robotics',
         message: string,
         problemId?: number,
-        codeContext?: string
+        codeContext?: string,
+        projectContext?: string
     ): Promise<ChatResponse> => {
         const { data } = await api.post('/chat', {
             track,
             message,
             problem_id: problemId,
             code_context: codeContext,
+            project_context: projectContext,
         });
         return data;
     },

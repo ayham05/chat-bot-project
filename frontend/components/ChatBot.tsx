@@ -8,6 +8,7 @@ import { useAppStore } from '@/lib/store';
 interface ChatBotProps {
     track: 'problem_solving' | 'robotics';
     problemId?: number;
+    projectContext?: string;
 }
 
 interface Message {
@@ -15,7 +16,7 @@ interface Message {
     content: string;
 }
 
-export default function ChatBot({ track, problemId }: ChatBotProps) {
+export default function ChatBot({ track, problemId, projectContext }: ChatBotProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +56,8 @@ export default function ChatBot({ track, problemId }: ChatBotProps) {
                 track,
                 userMessage,
                 problemId,
-                currentCode || undefined
+                currentCode || undefined,
+                projectContext
             );
 
             setMessages((prev) => [

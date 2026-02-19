@@ -13,6 +13,7 @@ class ChatRequest(BaseModel):
     message: str
     problem_id: Optional[int] = None  # For context in problem solving
     code_context: Optional[str] = None  # Current code being worked on
+    project_context: Optional[str] = None  # Active Tinkercad project for robotics
 
 
 class ChatResponse(BaseModel):

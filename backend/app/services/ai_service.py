@@ -18,6 +18,8 @@ class AIService:
         self.model_name = settings.AI_MODEL
         try:
             self.model = genai.GenerativeModel(self.model_name)
+            # Allow up to 120s for large prompts (e.g. few-shot problem generation)
+            self.request_options = {"timeout": 120}
         except Exception as e:
             logger.error(f"Failed to initialize model {self.model_name}: {e}")
             raise
@@ -129,7 +131,9 @@ where "examples" is an array of objects with "input", "output", "explanation".
 """
 
         try:
-            response = await self.model.generate_content_async(prompt)
+            response = await self.model.generate_content_async(
+                prompt, request_options=self.request_options
+            )
             text = self._clean_json_response(response.text)
             return json.loads(text)
         except json.JSONDecodeError as e:
@@ -169,7 +173,9 @@ where "examples" is an array of objects with "input", "output", "explanation".
         )
 
         try:
-            response = await self.model.generate_content_async(prompt)
+            response = await self.model.generate_content_async(
+                prompt, request_options=self.request_options
+            )
             text = self._clean_json_response(response.text)
             result = json.loads(text)
 
@@ -216,18 +222,47 @@ where "examples" is an array of objects with "input", "output", "explanation".
         )
 
         try:
-            response = await self.model.generate_content_async(prompt)
+            response = await self.model.generate_content_async(
+                prompt, request_options=self.request_options
+            )
             return response.text
         except Exception as e:
             logger.error(f"Error in review_solution: {e}")
             raise
 
+    # ── Track-specific system prompts ──────────────────────────────────
+    SYSTEM_PROMPTS = {
+        "problem_solving": (
+            "You are CodeBot, a friendly and encouraging C++ tutor for beginners. "
+            "You specialize in C++ logic, algorithms, data structures, and competitive programming (ACM/ICPC style). "
+            "Always answer in Arabic. Keep code snippets in English (C++). "
+            "Be encouraging, patient, and give clear step-by-step explanations."
+        ),
+        "robotics": (
+            "You are RoboBot, a friendly and enthusiastic electronics and robotics tutor. "
+            "You specialize in Arduino, Tinkercad circuits, sensors, LEDs, motors, and hardware projects. "
+            "Always answer in Arabic. Keep code snippets (Arduino/C++) and component names in English. "
+            "Be encouraging, patient, and guide the student through wiring and code step-by-step. "
+            "When the student is working on a specific Tinkercad project, tailor your answers to that project."
+        ),
+    }
+
     async def chat(self, track: str, message: str, history: list = None, **kwargs) -> dict:
-        """Chat with the AI tutor."""
-        system_prompt = (
-            "You are CodeBot, a friendly C++ tutor for beginners. "
-            "Answer in Arabic, keep code in English. Be encouraging."
+        """Chat with the AI tutor. Prompt switches based on *track*."""
+
+        # Pick the right personality
+        system_prompt = self.SYSTEM_PROMPTS.get(
+            track, self.SYSTEM_PROMPTS["problem_solving"]
         )
+
+        # If the robotics page told us which project is selected, add it
+        if kwargs.get("project_context"):
+            system_prompt += (
+                f"\n\nThe student is currently working on the following project: "
+                f"{kwargs['project_context']}. "
+                f"Tailor your responses to help with this specific project."
+            )
+
         full_prompt = f"System: {system_prompt}\nUser: {message}"
 
         if kwargs.get("problem_context"):
@@ -237,7 +272,9 @@ where "examples" is an array of objects with "input", "output", "explanation".
             full_prompt += f"\nCode: {kwargs['code_context']}"
 
         try:
-            response = await self.model.generate_content_async(full_prompt)
+            response = await self.model.generate_content_async(
+                full_prompt, request_options=self.request_options
+            )
             return {
                 "message": response.text,
                 "message_ar": response.text,

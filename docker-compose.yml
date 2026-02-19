@@ -39,14 +39,11 @@ services:
       dockerfile: Dockerfile
     container_name: codebot-backend
     restart: unless-stopped
+    env_file:
+      - ./backend/.env
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-codebot}
       - SECRET_KEY=${SECRET_KEY:-change-this-in-production}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
-      - AI_PROVIDER=${AI_PROVIDER:-gemini}
-      - AI_MODEL=${AI_MODEL:-gemini-2.0-flash}
-      - DEBUG=${DEBUG:-false}
     depends_on:
       db:
         condition: service_healthy

@@ -239,7 +239,14 @@ export default function RoboticsPage() {
                 {/* Chat Panel */}
                 {!isFullscreen && (
                     <div className="w-96 border-r border-white/10">
-                        <ChatBot track="robotics" />
+                        <ChatBot
+                            track="robotics"
+                            projectContext={
+                                currentProject
+                                    ? `${currentProject.title_en} - ${currentProject.description}`
+                                    : undefined
+                            }
+                        />
                     </div>
                 )}
             </div>

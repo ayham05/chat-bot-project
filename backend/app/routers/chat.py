@@ -41,7 +41,8 @@ async def send_message(
             message=request.message,
             history=[],
             problem_context=problem_context,
-            code_context=request.code_context
+            code_context=request.code_context,
+            project_context=request.project_context
         )
         
         return ChatResponse(
@@ -85,7 +86,8 @@ async def send_message(
         message=request.message,
         history=chat_history.messages,
         problem_context=problem_context,
-        code_context=request.code_context
+        code_context=request.code_context,
+        project_context=request.project_context
     )
     
     # Update chat history
