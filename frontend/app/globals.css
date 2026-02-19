@@ -25,11 +25,9 @@ body {
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
+  background: linear-gradient(to bottom,
       rgb(var(--background-start-rgb)),
-      rgb(var(--background-end-rgb))
-    );
+      rgb(var(--background-end-rgb)));
   min-height: 100vh;
 }
 
@@ -77,17 +75,17 @@ pre code {
   .glass {
     @apply bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl;
   }
-  
+
   .glass-dark {
     @apply bg-slate-900/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl;
   }
-  
+
   .gradient-border {
     position: relative;
     background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(217, 70, 239, 0.2));
     border-radius: 1rem;
   }
-  
+
   .gradient-border::before {
     content: '';
     position: absolute;
@@ -95,8 +93,8 @@ pre code {
     border-radius: inherit;
     padding: 1px;
     background: linear-gradient(135deg, #0ea5e9, #d946ef);
-    -webkit-mask: 
-      linear-gradient(#fff 0 0) content-box, 
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
       linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
@@ -104,25 +102,17 @@ pre code {
   }
 
   .btn-primary {
-    @apply px-6 py-3 bg-gradient-to-r from-primary-500 to-accent-500 
-           text-white font-semibold rounded-xl shadow-lg 
-           hover:shadow-xl hover:scale-105 transition-all duration-300
-           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
+    @apply px-6 py-3 bg-gradient-to-r from-primary-500 to-accent-500 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
   }
-  
+
   .btn-secondary {
-    @apply px-6 py-3 bg-white/10 backdrop-blur-lg border border-white/20
-           text-white font-semibold rounded-xl
-           hover:bg-white/20 transition-all duration-300;
+    @apply px-6 py-3 bg-white/10 backdrop-blur-lg border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all duration-300;
   }
-  
+
   .input-field {
-    @apply w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl
-           text-white placeholder-white/40 
-           focus:outline-none focus:border-primary-500/50 focus:ring-2 focus:ring-primary-500/20
-           transition-all duration-300;
+    @apply w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-primary-500/50 focus:ring-2 focus:ring-primary-500/20 transition-all duration-300;
   }
-  
+
   .card {
     @apply glass p-6 hover:bg-white/15 transition-all duration-300;
   }
@@ -147,10 +137,45 @@ pre code {
 }
 
 @keyframes bounce {
-  0%, 80%, 100% {
+
+  0%,
+  80%,
+  100% {
     transform: scale(0);
   }
+
   40% {
     transform: scale(1);
   }
+}
+
+/* KaTeX math — dark theme overrides */
+.katex {
+  color: #7dd3fc;
+  /* sky-300 — stands out on dark bg */
+  font-size: 1em;
+}
+
+.katex .katex-html {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Math variable fallback (for non-KaTeX renders) */
+.math-var {
+  direction: ltr;
+  unicode-bidi: embed;
+  display: inline;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-style: italic;
+  color: #7dd3fc;
+  font-size: 0.95em;
+  white-space: nowrap;
+}
+
+/* IO / code blocks — always LTR */
+.io-block {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: embed;
 }

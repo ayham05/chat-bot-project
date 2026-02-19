@@ -21,7 +21,11 @@ async def generate_problem(request: GenerateProblemRequest):
         # Map raw AI output to the frontend Problem interface
         examples = result.get("examples", [])
         sample_io = [
-            {"input": ex.get("input", ""), "output": ex.get("output", "")}
+            {
+                "input": ex.get("input", ""),
+                "output": ex.get("output", ""),
+                "explanation": ex.get("explanation", ""),
+            }
             for ex in examples
         ]
         return GeneratedProblemResponse(
@@ -32,6 +36,8 @@ async def generate_problem(request: GenerateProblemRequest):
             desc_en=result.get("description", ""),
             desc_ar=result.get("description_ar", ""),
             constraints=result.get("constraints", ""),
+            input_format=result.get("input_format", ""),
+            output_format=result.get("output_format", ""),
             sample_io=sample_io,
             starter_code=result.get("starter_code", ""),
         )

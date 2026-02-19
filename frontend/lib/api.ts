@@ -30,7 +30,7 @@ export interface Problem {
     constraints?: string;
     input_format?: string;
     output_format?: string;
-    sample_io: Array<{ input: string; output: string }>;
+    sample_io: Array<{ input: string; output: string; explanation?: string }>;
 }
 
 export interface ChatMessage {
@@ -169,6 +169,7 @@ export const generateApi = {
         const sampleIo = examples.map((ex: any) => ({
             input: ex.input || '',
             output: ex.output || '',
+            explanation: ex.explanation || '',
         }));
         return {
             id: Date.now(),
