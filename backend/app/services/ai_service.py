@@ -24,17 +24,6 @@ class AIService:
             logger.error(f"Failed to initialize model {self.model_name}: {e}")
             raise
 
-    def _clean_json_response(self, text: str) -> str:
-        """Strip markdown code fencing from an AI response."""
-        text = text.strip()
-        if text.startswith("```json"):
-            text = text[7:]
-        if text.startswith("```"):
-            text = text[3:]
-        if text.endswith("```"):
-            text = text[:-3]
-        return text.strip()
-
     async def generate_problem(self, topic: str, difficulty: str) -> dict:
         prompt = f"""\
 You are a **Senior Competitive Programming Problem Setter** who writes problems strictly following the Codeforces / ACM-ICPC problem-setting conventions.
@@ -105,10 +94,11 @@ where "examples" is an array of objects with "input", "output", "explanation".
 
         try:
             response = await self.model.generate_content_async(
-                prompt, request_options=self.request_options
+                prompt, 
+                request_options=self.request_options,
+                generation_config={"response_mime_type": "application/json"}
             )
-            text = self._clean_json_response(response.text)
-            return json.loads(text)
+            return json.loads(response.text)
         except json.JSONDecodeError as e:
             logger.error(f"generate_problem JSON parse error: {e}")
             raise ValueError(f"AI returned invalid JSON: {e}")
@@ -127,6 +117,12 @@ where "examples" is an array of objects with "input", "output", "explanation".
 
         Returns a dict with: status, is_correct, feedback_en, feedback_ar, hint.
         """
+        if len(problem_desc) > 1500:
+            problem_desc = problem_desc[:1500] + "..."
+            
+        if sample_io and len(sample_io) > 3:
+            sample_io = sample_io[:3]
+
         sample_io_text = json.dumps(sample_io, ensure_ascii=False) if sample_io else "N/A"
 
         prompt = (
@@ -147,10 +143,11 @@ where "examples" is an array of objects with "input", "output", "explanation".
 
         try:
             response = await self.model.generate_content_async(
-                prompt, request_options=self.request_options
+                prompt, 
+                request_options=self.request_options,
+                generation_config={"response_mime_type": "application/json"}
             )
-            text = self._clean_json_response(response.text)
-            result = json.loads(text)
+            result = json.loads(response.text)
 
             # Validate required keys
             required = {"status", "is_correct", "feedback_en", "feedback_ar", "hint"}
@@ -228,6 +225,14 @@ where "examples" is an array of objects with "input", "output", "explanation".
             track, self.SYSTEM_PROMPTS["problem_solving"]
         )
 
+        system_prompt += (
+            "\n\nYou MUST respond strictly with a valid JSON object containing EXACTLY three keys:\n"
+            '- "message_en": The English version of your response.\n'
+            '- "message_ar": The Arabic version of your response.\n'
+            '- "suggestions": An array of maximum 3 short follow-up questions or suggestions for the user as strings.\n'
+            "No markdown fencing or other text outside the JSON."
+        )
+
         # If the robotics page told us which project is selected, add it
         if kwargs.get("project_context"):
             system_prompt += (
@@ -239,24 +244,34 @@ where "examples" is an array of objects with "input", "output", "explanation".
         full_prompt = f"System: {system_prompt}\nUser: {message}"
 
         if kwargs.get("problem_context"):
-            full_prompt += f"\nContext: {kwargs['problem_context']}"
+            full_prompt += f"\nContext: {kwargs['problem_context']}\n"
 
         if kwargs.get("code_context"):
-            full_prompt += f"\nCode: {kwargs['code_context']}"
+            full_prompt += f"\nCode: {kwargs['code_context']}\n"
 
         try:
             response = await self.model.generate_content_async(
-                full_prompt, request_options=self.request_options
+                full_prompt, 
+                request_options=self.request_options,
+                generation_config={"response_mime_type": "application/json"}
             )
+            result = json.loads(response.text)
             return {
-                "message": response.text,
-                "message_ar": response.text,
+                "message": result.get("message_en", ""),
+                "message_ar": result.get("message_ar", ""),
+                "suggestions": result.get("suggestions", []),
+            }
+        except json.JSONDecodeError as e:
+            logger.error(f"Chat JSON parse error: {e}")
+            return {
+                "message": "I'm sorry, I couldn't format my response properly.",
+                "message_ar": "عذراً، لم أتمكن من تنسيق الرد بشكل صحيح.",
                 "suggestions": [],
             }
         except Exception as e:
             logger.error(f"Chat Error: {e}")
             return {
-                "message": "عذراً، حدث خطأ في الاتصال.",
+                "message": "I'm sorry, there was a connection error.",
                 "message_ar": "عذراً، حدث خطأ في الاتصال.",
                 "suggestions": [],
             }

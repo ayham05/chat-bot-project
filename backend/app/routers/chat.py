@@ -58,7 +58,7 @@ async def send_message(
         select(ChatHistory).where(
             ChatHistory.user_id == current_user.id,
             ChatHistory.track == request.track
-        ).order_by(ChatHistory.updated_at.desc()).limit(1)
+        ).order_by(ChatHistory.updated_at.desc()).limit(1).with_for_update()
     )
     chat_history = result.scalar_one_or_none()
     
