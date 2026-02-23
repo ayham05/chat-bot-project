@@ -30,7 +30,14 @@ class Settings(BaseSettings):
     AI_MODEL: str = "gemini-flash-latest"
     
     # CORS
-    CORS_ORIGINS: list = ["http://localhost:3000", "http://localhost"]
+    CORS_ORIGINS: list = [
+        "http://localhost:3000", 
+        "http://localhost",
+        "http://149.56.14.172",
+        "https://149.56.14.172",
+        "http://vps-3ae4d1b4.vps.ovh.ca",
+        "https://vps-3ae4d1b4.vps.ovh.ca"
+    ]
     
     class Config:
         env_file = ".env"
